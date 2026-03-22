@@ -618,8 +618,32 @@ function startKlineStream(pair) {
   } catch(e) { nextWs(); }
 }
 
-// Forex via Frankfurter — genuinely CORS-friendly
-async function fetchForex(pair) {
+// Fetch real historical candles via serverless proxy (no CORS)
+async function fetchRealCandles(pair) {
+  const sym = B_SYM[pair]; if (!sym) return false;
+  try {
+    const url = `/api/binance?path=v3/klines&symbol=${sym.toUpperCase()}&interval=${activeTF}&limit=80`;
+    const res  = await fetch(url);
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) return false;
+    liveCandles[pair] = data.map(k => ({
+      open:  parseFloat(k[1]),
+      high:  parseFloat(k[2]),
+      low:   parseFloat(k[3]),
+      close: parseFloat(k[4]),
+      bull:  parseFloat(k[4]) >= parseFloat(k[1]),
+      closed: true
+    }));
+    candles = [...liveCandles[pair]];
+    // Override last close with live price from miniTicker if available
+    if (livePrices[pair]) candles[candles.length-1].close = livePrices[pair];
+    currentPrice = livePrices[pair] || candles[candles.length-1].close;
+    showPrice(pair, currentPrice);
+    smcGen(); drawChart();
+    return true;
+  } catch(e) { return false; }
+}
   const m = FOREX_MAP[pair]; if (!m) return;
   try {
     const r = await fetch(`https://api.frankfurter.app/latest?from=${m.f}&to=${m.t}`);
@@ -646,9 +670,11 @@ function connect(pair) {
   drawChart();
 
   if (B_SYM[pair]) {
-    // Crypto — WS provides both price and candles
+    // 1. Fetch real historical candles via serverless proxy → accurate chart immediately
+    fetchRealCandles(pair);
+    // 2. WS kline keeps candles updating in real time
     startKlineStream(pair);
-    // miniTicker already running globally
+    // miniTicker already running globally for live price
   } else if (FOREX_MAP[pair]) {
     // Forex — Frankfurter for rate, simulated candles
     fetchForex(pair).then(() => { seedCandles(pair); smcGen(); drawChart(); });
@@ -1244,6 +1270,7 @@ function setTF(el, tf) {
   liveCandles[activePair] = [];
   if(wsKline){wsKline.close();wsKline=null;}
   connect(activePair);
+  if(B_SYM[activePair]) fetchRealCandles(activePair);
 }
 
 function setFilter(el, mode) {
