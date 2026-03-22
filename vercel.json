@@ -1,17 +1,3 @@
 {
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/binance-api/:path*",
-      "destination": "https://api.binance.com/api/:path*"
-    },
-    {
-      "source": "/er-api/:path*",
-      "destination": "https://open.er-api.com/v6/:path*"
-    },
-    {
-      "source": "/frankfurter/:path*",
-      "destination": "https://api.frankfurter.app/:path*"
-    }
-  ]
+  "version": 2
 }
