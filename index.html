@@ -497,14 +497,22 @@ function makeCandle(open) {
 }
 
 function tickSim() {
-  if (B_SYM[activePair] && liveCandles[activePair]?.length) {
+  // If kline WS has built up real candles, use them
+  if (B_SYM[activePair] && liveCandles[activePair]?.length >= 5) {
     candles = [...liveCandles[activePair]];
     currentPrice = livePrices[activePair] || candles[candles.length-1].close;
     return;
   }
   const last = candles[candles.length-1];
   const live = livePrices[activePair];
-  const open = live ? last.close + (live - last.close) * .1 : last.close;
+  // If we have a live price from miniTicker, strongly anchor to it
+  // This makes simulated candles show the correct price range
+  if (live && Math.abs(last.close - live) / live > 0.001) {
+    // Re-seed candles around the real live price
+    seedCandles(activePair);
+    return;
+  }
+  const open = live ? last.close + (live - last.close) * .3 : last.close;
   const c = makeCandle(open);
   candles.push(c);
   if (candles.length > 90) candles.shift();
@@ -548,16 +556,27 @@ function startMiniTicker() {
       if (typeof e.data !== 'string') return;
       let arr; try { arr = JSON.parse(e.data); } catch(e2){ return; }
       if (!Array.isArray(arr)) return;
+      // Build reverse lookup once per message
       const rev = {};
       Object.entries(B_SYM).forEach(([p,s]) => { rev[s.toUpperCase()] = p; });
       arr.forEach(tick => {
         const pair = rev[tick.s]; if (!pair) return;
-        livePrices[pair] = parseFloat(tick.c);
-        live24h[pair]    = parseFloat(tick.P);
+        const price = parseFloat(tick.c);
+        const chg   = parseFloat(tick.P);
+        if (!price || price <= 0) return;
+        livePrices[pair] = price;
+        live24h[pair]    = chg;
         if (pair === activePair) {
           setPriceBadge('● BINANCE LIVE', 'var(--green)', 'rgba(0,245,160,.3)');
-          showPrice(pair, livePrices[pair]);
-          show24h(live24h[pair]);
+          showPrice(pair, price);
+          show24h(chg);
+          // Keep chart's last candle close in sync with real price
+          // so the price line on chart matches the header display
+          if (candles.length > 0) {
+            candles[candles.length-1].close = price;
+            candles[candles.length-1].bull  = price >= candles[candles.length-1].open;
+            currentPrice = price;
+          }
         }
       });
     };
@@ -1106,36 +1125,48 @@ function updateTgStatus() {
 }
 async function testTg() {
   if(!tg.tok||!tg.cid){showToastMsg('⚠ Enter token + channel first');return;}
-  const ok=await tgSend('🧪 *WINNING TRADE* — Test message received\\! Signals will appear here\\.');
-  showToastMsg(ok?'✅ Test sent!':'❌ Failed — check token and channel ID');
+  const ok=await tgSend('🧪 <b>WINNING TRADE</b> — Test connection successful! Your signal alerts are working.');
+  showToastMsg(ok?'✅ Test sent to Telegram!':'❌ Failed — check your token and channel ID');
 }
+
 async function tgSend(text) {
   try {
-    const r=await fetch('https://api.telegram.org/bot'+tg.tok+'/sendMessage',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:tg.cid,text,parse_mode:'MarkdownV2',disable_web_page_preview:true})
+    const r = await fetch('https://api.telegram.org/bot'+tg.tok+'/sendMessage', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        chat_id:    tg.cid,
+        text:       text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      })
     });
-    const d=await r.json(); return d.ok;
-  } catch(e){return false;}
+    const d = await r.json();
+    if (!d.ok) console.warn('Telegram error:', d.description);
+    return d.ok;
+  } catch(e) {
+    console.warn('Telegram fetch failed:', e);
+    return false;
+  }
 }
-function esc(s){return String(s).replace(/[_*[\]()~`>#+\-=|{}.!\\]/g,'\\$&');}
+
 async function sendTg(sig) {
-  if(!tg.tok||!tg.cid||(sig.score||0)<tg.min) return;
-  const dir=sig.dir==='long'?'🟢 LONG':'🔴 SHORT';
-  const msg=[
-    '⚡ *WINNING TRADE SIGNAL*',
-    dir+' — *'+esc(sig.pair)+'*',
-    '⭐ Score: *'+sig.score+'/5* \\| R:R: *'+esc(sig.rr)+'* \\| '+esc(sig.tf),
-    '',
-    '🎯 Entry: `'+esc(String(sig.en))+'`',
-    '🛑 SL:    `'+esc(String(sig.sl))+'`',
-    '✅ TP1:   `'+esc(String(sig.tp1))+'`',
-    '🏆 TP2:   `'+esc(String(sig.tp2))+'`',
-    '',
-    '📐 '+sig.pats.map(p=>esc(p)).join(' · ')+' · '+esc(sig.cnf),
-    '_'+esc(sig.time)+'_',
-  ].join('\n');
-  await tgSend(msg);
+  if (!tg.tok || !tg.cid) return;
+  if ((sig.score||0) < tg.min) return;
+  const dir  = sig.dir === 'long' ? '🟢 LONG' : '🔴 SHORT';
+  const star = sig.score >= 5 ? '⭐⭐⭐⭐⭐' : sig.score >= 4 ? '⭐⭐⭐⭐' : '⭐⭐⭐';
+  const text =
+    '⚡ <b>WINNING TRADE SIGNAL</b>\n' +
+    dir + ' — <b>' + sig.pair + '</b>\n' +
+    star + ' Score: <b>' + sig.score + '/5</b>  |  R:R: <b>' + sig.rr + '</b>  |  ' + sig.tf + '\n\n' +
+    '🎯 Entry:  <code>' + sig.en  + '</code>\n' +
+    '🛑 SL:     <code>' + sig.sl  + '</code>\n' +
+    '✅ TP1:    <code>' + sig.tp1 + '</code>\n' +
+    '🏆 TP2:    <code>' + sig.tp2 + '</code>\n\n' +
+    '📐 ' + sig.pats.join(' · ') + '\n' +
+    '📊 ' + sig.cnf + '  |  ' + sig.htf + '\n\n' +
+    '<i>' + sig.time + ' — WINNING TRADE</i>';
+  await tgSend(text);
 }
 
 // ═══════════════════════════════════════════════════════
