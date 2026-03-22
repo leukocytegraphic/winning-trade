@@ -1397,10 +1397,12 @@ const B_SYM = {};
 [...PAIRS.MAJORS,...PAIRS.ALTS,...PAIRS.MEME].forEach(p=>{B_SYM[p]=p.replace('/','').toLowerCase();});
 
 // ── API CONFIG ────────────────────────────────────────
-const IS_DEPLOYED = location.hostname!=='localhost' && location.hostname!=='127.0.0.1';
-const BINANCE_REST = IS_DEPLOYED ? '/binance-api' : 'https://api.binance.com/api';
-const ER_API       = IS_DEPLOYED ? '/er-api'       : 'https://open.er-api.com/v6';
-const FKT_API      = IS_DEPLOYED ? '/frankfurter'  : 'https://api.frankfurter.app';
+// REST: use Vercel serverless functions (bypasses CORS completely)
+// WebSocket: always direct (no CORS on websockets)
+const IS_DEPLOYED = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+const BINANCE_REST = IS_DEPLOYED ? '/api/binance' : 'https://api.binance.com/api';
+const ER_API       = IS_DEPLOYED ? '/api/forex'   : 'https://open.er-api.com/v6';
+const FKT_API      = 'https://api.frankfurter.app';
 const WS_HOSTS = ['wss://stream.binance.com:443','wss://stream.binance.com:9443','wss://data-stream.binance.com:443'];
 let wsHostIdx = 0;
 const getWsHost  = () => WS_HOSTS[wsHostIdx % WS_HOSTS.length];
@@ -1496,7 +1498,11 @@ function connectKlineStream(pair) {
 async function fetchBinanceCandles(pair) {
   const sym=B_SYM[pair]; if(!sym) return false;
   try {
-    const res=await fetch(BINANCE_REST+'/v3/klines?symbol='+sym.toUpperCase()+'&interval='+activeTF+'&limit=80');
+    // Deployed: /api/binance?path=v3/klines&symbol=...  Local: direct Binance URL
+    const url = IS_DEPLOYED
+      ? `${BINANCE_REST}?path=v3/klines&symbol=${sym.toUpperCase()}&interval=${activeTF}&limit=80`
+      : `${BINANCE_REST}/v3/klines?symbol=${sym.toUpperCase()}&interval=${activeTF}&limit=80`;
+    const res=await fetch(url);
     if(!res.ok) return false;
     const data=await res.json();
     if(!Array.isArray(data)||!data.length) return false;
@@ -1510,12 +1516,18 @@ async function fetchBinanceCandles(pair) {
 async function fetchSpotPrice(pair) {
   const sym=B_SYM[pair]; if(!sym) return false;
   try {
-    const r=await fetch(BINANCE_REST+'/v3/ticker/price?symbol='+sym.toUpperCase());
+    const url = IS_DEPLOYED
+      ? `${BINANCE_REST}?path=v3/ticker/price&symbol=${sym.toUpperCase()}`
+      : `${BINANCE_REST}/v3/ticker/price?symbol=${sym.toUpperCase()}`;
+    const r=await fetch(url);
     if(!r.ok) return false;
     const d=await r.json(); const price=parseFloat(d.price); if(!price) return false;
     livePrices[pair]=price; if(pair===activePair)updateLivePriceDisplay(pair,price);
     try {
-      const r2=await fetch(BINANCE_REST+'/v3/ticker/24hr?symbol='+sym.toUpperCase());
+      const url2 = IS_DEPLOYED
+        ? `${BINANCE_REST}?path=v3/ticker/24hr&symbol=${sym.toUpperCase()}`
+        : `${BINANCE_REST}/v3/ticker/24hr?symbol=${sym.toUpperCase()}`;
+      const r2=await fetch(url2);
       const d2=await r2.json(); live24hChg[pair]=parseFloat(d2.priceChangePercent);
       if(pair===activePair)update24hChange(live24hChg[pair]);
     } catch(e2){}
@@ -1526,7 +1538,10 @@ async function fetchSpotPrice(pair) {
 async function fetchForexPrice(pair) {
   const map=FOREX_MAP[pair]; if(!map) return;
   try {
-    const res=await fetch(ER_API+'/latest/'+map.from);
+    const url = IS_DEPLOYED
+      ? `${ER_API}?base=${map.from}&to=${map.to}`
+      : `${ER_API}/latest/${map.from}`;
+    const res=await fetch(url);
     if(!res.ok) throw new Error();
     const data=await res.json(); const rate=data.rates?.[map.to]; if(!rate) throw new Error();
     livePrices[pair]=rate;

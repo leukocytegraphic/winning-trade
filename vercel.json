@@ -1,3 +1,9 @@
 {
-  "version": 2
+  "version": 2,
+  "functions": {
+    "api/binance.js": { "maxDuration": 10 },
+    "api/forex.js":   { "maxDuration": 10 },
+    "api/news.js":    { "maxDuration": 10 },
+    "api/send-signal.js": { "maxDuration": 10 }
+  }
 }
