@@ -1,18 +1,17 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/binance-api/:path*", "destination": "https://api.binance.com/api/:path*" },
-    { "source": "/er-api/:path*",      "destination": "https://open.er-api.com/v6/:path*" },
-    { "source": "/frankfurter/:path*", "destination": "https://api.frankfurter.app/:path*" }
-  ],
-  "headers": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin",  "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
+      "source": "/binance-api/:path*",
+      "destination": "https://api.binance.com/api/:path*"
+    },
+    {
+      "source": "/er-api/:path*",
+      "destination": "https://open.er-api.com/v6/:path*"
+    },
+    {
+      "source": "/frankfurter/:path*",
+      "destination": "https://api.frankfurter.app/:path*"
     }
   ]
 }
