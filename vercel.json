@@ -1,10 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/binance-api/(.*)", "destination": "https://api.binance.com/api/$1" },
-    { "source": "/er-api/(.*)",      "destination": "https://open.er-api.com/v6/$1" },
-    { "source": "/frankfurter/(.*)", "destination": "https://api.frankfurter.app/$1" },
-    { "source": "/news-api/(.*)",    "destination": "https://cryptopanic.com/api/v1/$1" }
+    { "source": "/binance-api/:path*", "destination": "https://api.binance.com/api/:path*" },
+    { "source": "/er-api/:path*",      "destination": "https://open.er-api.com/v6/:path*" },
+    { "source": "/frankfurter/:path*", "destination": "https://api.frankfurter.app/:path*" }
   ],
   "headers": [
     {
