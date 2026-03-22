@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/binance-api/(.*)", "destination": "https://api.binance.com/api/$1" },
+    { "source": "/er-api/(.*)",      "destination": "https://open.er-api.com/v6/$1" },
+    { "source": "/frankfurter/(.*)", "destination": "https://api.frankfurter.app/$1" },
+    { "source": "/news-api/(.*)",    "destination": "https://cryptopanic.com/api/v1/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
+  ]
+}
