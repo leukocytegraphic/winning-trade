@@ -1,35 +1,29 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const { symbol } = req.query;
+  const pair = symbol.replace('/', '');
   
-  // TO ADJUST: Replace 'YOUR_API_KEY' with your free key from polygon.io
-  const API_KEY = process.env.POLYGON_API_KEY || 'G2epf8MO6tWK5nNwhb6R2xBcdPMK8SAb'; 
-  
-  // Format EUR/USD to C:EURUSD
-  const polySym = "C:" + symbol.replace('/', '');
-  const to = Date.now();
-  const from = to - (24 * 60 * 60 * 1000); // Get last 24 hours of 1-minute data
-
-  const url = `https://api.polygon.io/v2/aggs/ticker/${polySym}/range/1/minute/${from}/${to}?adjusted=true&sort=asc&limit=100&apiKey=${API_KEY}`;
+  // Using a public endpoint for candles
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${pair}=X?interval=1m&range=1d`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
     const data = await response.json();
+    const result = data.chart.result[0];
+    const quotes = result.indicators.quote[0];
     
-    if (!data.results) return res.status(200).json([]);
+    // Convert Yahoo format to your [time, o, h, l, c, v] format
+    const candles = result.timestamp.map((t, i) => [
+      t * 1000,
+      quotes.open[i],
+      quotes.high[i],
+      quotes.low[i],
+      quotes.close[i],
+      quotes.volume[i] || 0
+    ]).filter(c => c[1] !== null);
 
-    // Map Polygon data to your [time, open, high, low, close, volume] format
-    const candles = data.results.map(r => [
-      r.t, 
-      parseFloat(r.o), 
-      parseFloat(r.h), 
-      parseFloat(r.l), 
-      parseFloat(r.c), 
-      Math.round(r.v)
-    ]);
-
-    return res.status(200).json(candles);
+    return res.status(200).json(candles.slice(-100));
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(200).json([]); // Return empty array on failure
   }
 }

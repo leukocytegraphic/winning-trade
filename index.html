@@ -1,70 +1,57 @@
-// --- Updated fetchRealCandles ---
-async function fetchRealCandles(pair) {
-  let url;
-  const isForex = PAIRS.FOREX.includes(pair);
-
-  if (isForex) {
-    url = `/api/forex?symbol=${pair}`;
-  } else {
-    const bSym = B_SYM[pair];
-    if (!bSym) return false;
-    url = `/api/binance?path=v3/klines&symbol=${bSym.toUpperCase()}&interval=1m&limit=100`;
+// 1. Updated Seeding Logic
+async function seedCandles(pair) {
+  liveCandles[pair] = []; // Initialize empty
+  const success = await fetchRealCandles(pair);
+  
+  // If real fetch failed or returned nothing, build a fake history so chart works
+  if (!success || liveCandles[pair].length < 10) {
+    console.log(`Simulating history for ${pair}`);
+    let base = 1.10; // Default
+    if (pair.includes('BTC')) base = 60000;
+    let t = Date.now() - 100 * 60000;
+    for(let i=0; i<100; i++) {
+      let o = base + (Math.random()-0.5) * (base * 0.001);
+      let c = o + (Math.random()-0.5) * (base * 0.001);
+      liveCandles[pair].push([t + i*60000, o, Math.max(o,c), Math.min(o,c), c, 100]);
+    }
   }
+}
 
+// 2. Updated Fetch Logic
+async function fetchRealCandles(pair) {
   try {
+    const isForex = PAIRS.FOREX.includes(pair);
+    const url = isForex ? `/api/forex?symbol=${pair}` : `/api/binance?path=v3/klines&symbol=${B_SYM[pair].toUpperCase()}&interval=1m&limit=100`;
+    
     const res = await fetch(url);
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return false;
-
-    // Normalize data: ensure all values are Numbers
-    liveCandles[pair] = data.map(c => [
-      Number(c[0]), Number(c[1]), Number(c[2]), Number(c[3]), Number(c[4]), Number(c[5])
-    ]);
-    return true;
-  } catch (e) {
-    console.warn(`Could not fetch real data for ${pair}, using simulation.`);
-    return false;
-  }
-}
-
-// --- Updated connect (WebSocket) ---
-function connect(pair) {
-  if (ws) { ws.close(); ws = null; }
-  wsLive = false;
-
-  const bSym = B_SYM[pair];
-  if (!bSym) return; // Exit if Forex (No Binance WS for Forex)
-
-  const url = `wss://stream.binance.com:9443/ws/${bSym}@kline_1m`;
-  ws = new WebSocket(url);
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    const k = msg.k;
-    if (k.x) { // Candle closed
-      const newC = [k.t, Number(k.o), Number(k.h), Number(k.l), Number(k.c), Number(k.v)];
-      liveCandles[pair].push(newC);
-      if (liveCandles[pair].length > 200) liveCandles[pair].shift();
+    
+    if (data && data.length > 0) {
+      liveCandles[pair] = data.map(c => [
+        Number(c[0]), Number(c[1]), Number(c[2]), Number(c[3]), Number(c[4]), Number(c[5])
+      ]);
+      return true;
     }
-    wsLive = true;
-  };
+  } catch (e) { console.error("Fetch Error:", e); }
+  return false;
 }
 
-// --- Updated Loop ---
+// 3. Updated Loop (Safety First)
 function loop() {
   if (paused) return;
 
-  // Use real data if it exists and is populated
-  if (liveCandles[activePair] && liveCandles[activePair].length > 0) {
-    updateCS(activePair);
-  } else {
-    // If no real data yet, run simulation so the user sees movement
-    tickSim(); 
+  // CRITICAL: Only update if we actually have data to avoid crashes
+  if (liveCandles[activePair] && liveCandles[activePair].length > 5) {
+    if (wsLive) {
+      updateCS(activePair);
+    } else {
+      tickSim(); // Run sim movement if WebSocket isn't live (like for Forex)
+    }
+    
+    drawChart();
+    if (Math.random() < .04) smcGen();
+    
+    const gate = trySignal(activePair);
+    if (gate) pushSignal(makeSignal(activePair, gate));
   }
-
-  drawChart();
-  if (Math.random() < .04) smcGen();
-  
-  // Check for trade signals
-  const gate = trySignal(activePair);
-  if (gate) pushSignal(makeSignal(activePair, gate));
 }

@@ -1,7 +1,6 @@
 {
   "version": 2,
   "functions": {
-    "api/binance.js": { "maxDuration": 15 },
-    "api/forex.js": { "maxDuration": 15 }
+    "api/*.js": { "maxDuration": 15 }
   }
 }
