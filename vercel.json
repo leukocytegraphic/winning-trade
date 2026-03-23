@@ -1,6 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/binance.js": { "maxDuration": 10 }
+    "api/binance.js": { "maxDuration": 10 },
+    "api/polygon.js": { "maxDuration": 10 }
   }
 }

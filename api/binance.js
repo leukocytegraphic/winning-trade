@@ -14,9 +14,15 @@ export default async function handler(req, res) {
   const url = `https://api.binance.com/api/${path}${qs ? '?' + qs : ''}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const upstream = await fetch(url, {
-      headers: { 'User-Agent': 'WinningTrade/2.0' }
+      headers: { 'User-Agent': 'WinningTrade/2.0' },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
+
     const data = await upstream.json();
     res.setHeader('Cache-Control', 's-maxage=5');
     return res.status(upstream.status).json(data);

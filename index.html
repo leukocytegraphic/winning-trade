@@ -3,22 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WINNING TRADE</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<meta name="description" content="Real-time crypto, forex & meme coin trade signals powered by Smart Money Concepts — BoS, CHoCH, FVG, Order Blocks. 80%+ accuracy with live charts and Telegram alerts.">
+<meta name="keywords" content="crypto signals, forex signals, smart money concepts, BoS, CHoCH, FVG, order blocks, trading signals, live charts">
+<meta name="author" content="Winning Trade">
+<meta name="theme-color" content="#060a0f">
+<meta property="og:title" content="WINNING TRADE — Live SMC Signals">
+<meta property="og:description" content="Real-time trade signals for crypto, forex & meme coins with 80%+ accuracy.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://winning-trade.vercel.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WINNING TRADE — Live SMC Signals">
+<meta name="twitter:description" content="Real-time trade signals for crypto, forex & meme coins with 80%+ accuracy.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚡</text></svg>">
+<title>WINNING TRADE — Live SMC Trade Signals</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #060a0f; --surface: #0c1219; --border: #1a2535;
-  --green: #00f5a0; --blue: #00c3ff; --red: #ff3d6b;
+  --bg: #060a0f; --surface: #0c1219; --surface2: #0f1822; --border: #1a2535;
+  --green: #00f5a0; --green-dim: rgba(0,245,160,.08); --blue: #00c3ff; --blue-dim: rgba(0,195,255,.08);
+  --red: #ff3d6b; --red-dim: rgba(255,61,107,.08);
   --gold: #ffd166; --warn: #ff6b35; --muted: #4a6080; --text: #e2eaf4;
+  --glass: rgba(12,18,25,0.85); --glass-border: rgba(26,37,53,.6);
+  --radius: 14px; --radius-sm: 8px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Share Tech Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
-body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,245,160,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,0.03) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-.wrap { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:12px; }
+html { scroll-behavior:smooth; }
+body { font-family:'Share Tech Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,245,160,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,0.025) 1px,transparent 1px); background-size:50px 50px; pointer-events:none; z-index:0; }
+body::after { content:''; position:fixed; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 30% 20%, rgba(0,245,160,.04) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(0,195,255,.03) 0%, transparent 50%); pointer-events:none; z-index:0; animation:ambientDrift 20s ease-in-out infinite alternate; }
+@keyframes ambientDrift { 0%{transform:translate(0,0)} 100%{transform:translate(2%,1%)} }
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.wrap { position:relative; z-index:1; max-width:1440px; margin:0 auto; padding:14px; animation:fadeUp .5s ease; }
 
 /* ── HEADER ── */
-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:14px 18px; background:rgba(12,18,25,0.95); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; backdrop-filter:blur(10px); }
-.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--green); text-shadow:0 0 20px rgba(0,245,160,0.4); letter-spacing:0.1em; }
+header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:16px 20px; background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); margin-bottom:14px; backdrop-filter:blur(16px) saturate(1.2); box-shadow:0 4px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03); }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; color:var(--green); text-shadow:0 0 30px rgba(0,245,160,0.5), 0 0 60px rgba(0,245,160,0.15); letter-spacing:0.12em; }
 .logo span { color:var(--blue); }
 .price-box { display:flex; flex-direction:column; align-items:center; gap:2px; }
 #livePrice { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--gold); }
@@ -33,24 +53,26 @@ header { display:flex; align-items:center; justify-content:space-between; flex-w
 .snd-btn.off { background:none; border-color:var(--border); color:var(--muted); }
 .live-dot-wrap { display:flex; align-items:center; gap:6px; font-size:0.7rem; color:var(--green); background:rgba(0,245,160,0.07); border:1px solid rgba(0,245,160,0.25); border-radius:20px; padding:5px 12px; }
 .ldot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,245,160,0.4);} 50%{box-shadow:0 0 0 5px rgba(0,245,160,0);} }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,245,160,0.5);} 50%{box-shadow:0 0 0 6px rgba(0,245,160,0);} }
 
 /* ── STATS ── */
-.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px; }
-.stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; position:relative; overflow:hidden; }
-.stat::before { content:''; position:absolute; top:0;left:0;right:0;height:2px; background:linear-gradient(90deg,var(--green),var(--blue)); opacity:.5; }
-.stat-lbl { font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
-.stat-val { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; }
-.stat-sub { font-size:0.6rem; color:var(--muted); margin-top:2px; }
+.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+.stat { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:14px 16px; position:relative; overflow:hidden; backdrop-filter:blur(8px); transition:transform .2s, box-shadow .2s; }
+.stat:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.stat::before { content:''; position:absolute; top:0;left:0;right:0;height:2px; background:linear-gradient(90deg,var(--green),var(--blue)); opacity:.6; }
+.stat::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.02),transparent); background-size:200% 100%; animation:shimmer 3s ease-in-out infinite; pointer-events:none; }
+.stat-lbl { font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:5px; }
+.stat-val { font-family:'Syne',sans-serif; font-size:1.25rem; font-weight:700; }
+.stat-sub { font-size:0.6rem; color:var(--muted); margin-top:3px; }
 .g { color:var(--green); } .b { color:var(--blue); } .o { color:var(--gold); }
 
 /* ── MAIN GRID ── */
 .main-grid { display:grid; grid-template-columns:1fr 370px; gap:12px; }
 
 /* ── CHART ── */
-.chart-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-.panel-hdr { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px; }
-.panel-title { font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:700; letter-spacing:.06em; }
+.chart-panel { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); overflow:hidden; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,.2); }
+.panel-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--glass-border); flex-wrap:wrap; gap:8px; }
+.panel-title { font-family:'Syne',sans-serif; font-size:0.82rem; font-weight:700; letter-spacing:.08em; }
 .tf-tabs { display:flex; gap:4px; }
 .tf-btn { padding:3px 9px; font-family:inherit; font-size:0.68rem; border-radius:5px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; transition:all .2s; }
 .tf-btn.on { border-color:var(--green); color:var(--green); background:rgba(0,245,160,0.08); }
@@ -68,13 +90,13 @@ header { display:flex; align-items:center; justify-content:space-between; flex-w
 .ann-en  { background:rgba(255,107,53,.1); color:var(--warn); border:1px solid rgba(255,107,53,.25); }
 
 /* ── SIGNAL PANEL ── */
-.sig-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; }
+.sig-panel { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); display:flex; flex-direction:column; overflow:hidden; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,.2); }
 .notif-row { padding:7px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:0.6rem; color:var(--muted); }
 .sig-scroll { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:9px; max-height:500px; }
 .sig-scroll::-webkit-scrollbar { width:3px; }
 .sig-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-.sig-card { border-radius:9px; padding:12px; border:1px solid; position:relative; overflow:hidden; animation:slideIn .3s ease; cursor:pointer; transition:transform .15s; }
-.sig-card:hover { transform:translateX(3px); }
+.sig-card { border-radius:10px; padding:13px; border:1px solid; position:relative; overflow:hidden; animation:slideIn .35s ease; cursor:pointer; transition:transform .2s, box-shadow .2s; }
+.sig-card:hover { transform:translateX(4px); box-shadow:0 4px 16px rgba(0,0,0,.2); }
 .sig-card.long  { background:rgba(0,245,160,.04);  border-color:rgba(0,245,160,.2); }
 .sig-card.short { background:rgba(255,61,107,.04); border-color:rgba(255,61,107,.2); }
 .sig-card::before { content:''; position:absolute; left:0;top:0;bottom:0;width:3px; }
@@ -108,7 +130,7 @@ header { display:flex; align-items:center; justify-content:space-between; flex-w
 .empty-msg { text-align:center; padding:30px 16px; color:var(--muted); font-size:0.7rem; line-height:1.8; }
 
 /* ── CONDITION MONITOR ── */
-.cond-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-top:12px; overflow:hidden; }
+.cond-panel { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); margin-top:14px; overflow:hidden; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,.2); }
 .cond-grid { display:grid; grid-template-columns:repeat(4,1fr); padding:14px 16px; gap:12px; }
 .cond-item { display:flex; align-items:center; gap:8px; }
 .cicon { width:30px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:700; flex-shrink:0; border:1px solid var(--border); color:var(--muted); background:rgba(74,96,128,.15); }
@@ -118,7 +140,7 @@ header { display:flex; align-items:center; justify-content:space-between; flex-w
 .cond-val.on { color:var(--green); } .cond-val.off { color:var(--muted); }
 
 /* ── RISK CALCULATOR ── */
-.risk-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-top:12px; overflow:hidden; }
+.risk-panel { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); margin-top:14px; overflow:hidden; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,.2); }
 .risk-body { display:grid; grid-template-columns:1fr 1fr; }
 .risk-in { padding:16px 18px; border-right:1px solid var(--border); }
 .risk-out { padding:16px 18px; }
@@ -147,7 +169,7 @@ select.ri option { background:#0c1219; }
 .use-sig-btn { font-size:0.58rem; padding:2px 6px; border-radius:3px; border:1px solid rgba(0,195,255,.3); background:rgba(0,195,255,.07); color:var(--blue); cursor:pointer; font-family:inherit; margin-left:5px; }
 
 /* ── TELEGRAM PANEL ── */
-.tg-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-top:12px; overflow:hidden; }
+.tg-panel { background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius); margin-top:14px; overflow:hidden; backdrop-filter:blur(12px); box-shadow:0 4px 20px rgba(0,0,0,.2); }
 .tg-body { padding:16px 18px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .tg-status { display:flex; align-items:center; gap:6px; font-size:0.68rem; padding:5px 12px; border-radius:20px; border:1px solid var(--border); color:var(--muted); }
 .tg-status.on { border-color:rgba(0,245,160,.3); color:var(--green); background:rgba(0,245,160,.05); }
@@ -165,13 +187,13 @@ select.ri option { background:#0c1219; }
 .hr-res.win  { color:var(--green); } .hr-res.loss { color:var(--red); } .hr-res.open { color:var(--gold); }
 
 /* ── TOAST ── */
-#toast { position:fixed; bottom:24px; right:20px; background:var(--surface); border:1px solid var(--green); border-radius:10px; padding:13px 16px; max-width:300px; box-shadow:0 0 24px rgba(0,245,160,.15); z-index:999; transform:translateX(120%); transition:transform .35s cubic-bezier(.175,.885,.32,1.275); }
+#toast { position:fixed; bottom:24px; right:20px; background:var(--glass); border:1px solid var(--green); border-radius:var(--radius-sm); padding:14px 18px; max-width:320px; box-shadow:0 0 30px rgba(0,245,160,.18), 0 8px 32px rgba(0,0,0,.4); z-index:999; transform:translateX(120%); transition:transform .4s cubic-bezier(.175,.885,.32,1.275); backdrop-filter:blur(16px); }
 #toast.show { transform:translateX(0); }
 .toast-title { font-family:'Syne',sans-serif; font-size:0.75rem; font-weight:800; color:var(--green); margin-bottom:3px; }
 .toast-body { font-size:0.68rem; color:var(--text); line-height:1.5; }
 
 /* ── MOBILE ── */
-.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; height:58px; background:rgba(8,14,22,.98); border-top:1px solid var(--border); backdrop-filter:blur(12px); z-index:998; grid-template-columns:repeat(5,1fr); }
+.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; height:62px; background:rgba(8,14,22,.96); border-top:1px solid var(--glass-border); backdrop-filter:blur(16px) saturate(1.3); z-index:998; grid-template-columns:repeat(5,1fr); box-shadow:0 -4px 20px rgba(0,0,0,.3); }
 .mnav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:var(--muted); font-size:0.52rem; letter-spacing:.05em; text-transform:uppercase; border:none; background:none; font-family:inherit; }
 .mnav-btn .ni { font-size:1.15rem; line-height:1; }
 .mnav-btn.on { color:var(--green); }
@@ -621,6 +643,13 @@ function startKlineStream(pair) {
 // Fetch real historical candles via serverless proxy (no CORS)
 async function fetchRealCandles(pair) {
   const sym = B_SYM[pair]; if (!sym) return false;
+  // Try Binance first, then Polygon fallback
+  if (await fetchBinanceCandles(pair, sym)) return true;
+  if (await fetchPolygonCandles(pair, sym)) return true;
+  return false;
+}
+
+async function fetchBinanceCandles(pair, sym) {
   try {
     const url = `/api/binance?path=v3/klines&symbol=${sym.toUpperCase()}&interval=${activeTF}&limit=80`;
     const res  = await fetch(url);
@@ -636,7 +665,6 @@ async function fetchRealCandles(pair) {
       closed: true
     }));
     candles = [...liveCandles[pair]];
-    // Override last close with live price from miniTicker if available
     if (livePrices[pair]) candles[candles.length-1].close = livePrices[pair];
     currentPrice = livePrices[pair] || candles[candles.length-1].close;
     showPrice(pair, currentPrice);
@@ -644,7 +672,61 @@ async function fetchRealCandles(pair) {
     return true;
   } catch(e) { return false; }
 }
+
+// Polygon.io fallback with 4-key rotation
+let polygonKeyIdx = 0;
+async function fetchPolygonCandles(pair, sym) {
+  try {
+    const ticker = 'X:' + sym.toUpperCase().replace('USDT','USD');
+    const tfMap = {'1m':'1/minute','5m':'5/minute','15m':'15/minute','1h':'1/hour','4h':'4/hour','1d':'1/day'};
+    const mult = tfMap[activeTF] || '5/minute';
+    const to = new Date().toISOString().split('T')[0];
+    const from = new Date(Date.now() - 3*24*60*60*1000).toISOString().split('T')[0];
+    const url = `/api/polygon?ticker=${ticker}&multiplier=${mult}&from=${from}&to=${to}&limit=80&keyIdx=${polygonKeyIdx}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      polygonKeyIdx = (polygonKeyIdx + 1) % 4;
+      return false;
+    }
+    const data = await res.json();
+    if (!data.results || !data.results.length) return false;
+    liveCandles[pair] = data.results.map(k => ({
+      open:  k.o, high: k.h, low: k.l, close: k.c,
+      bull:  k.c >= k.o, closed: true
+    }));
+    candles = [...liveCandles[pair]];
+    if (livePrices[pair]) candles[candles.length-1].close = livePrices[pair];
+    currentPrice = livePrices[pair] || candles[candles.length-1].close;
+    showPrice(pair, currentPrice);
+    setPriceBadge('● POLYGON LIVE', 'var(--blue)', 'rgba(0,195,255,.3)');
+    smcGen(); drawChart();
+    return true;
+  } catch(e) {
+    polygonKeyIdx = (polygonKeyIdx + 1) % 4;
+    return false;
+  }
+}
+
+async function fetchForex(pair) {
   const m = FOREX_MAP[pair]; if (!m) return;
+  try {
+    // Try Polygon first for forex
+    const ticker = `C:${m.f}${m.t}`;
+    const res = await fetch(`/api/polygon?ticker=${ticker}&multiplier=5/minute&from=${new Date(Date.now()-86400000).toISOString().split('T')[0]}&to=${new Date().toISOString().split('T')[0]}&limit=1&keyIdx=${polygonKeyIdx}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length) {
+        const rate = data.results[data.results.length-1].c;
+        livePrices[pair] = rate;
+        if (pair === activePair) {
+          showPrice(pair, rate);
+          setPriceBadge('● POLYGON FX','var(--green)','rgba(0,245,160,.3)');
+        }
+        return;
+      }
+    }
+  } catch(e){}
+  // Fallback to Frankfurter
   try {
     const r = await fetch(`https://api.frankfurter.app/latest?from=${m.f}&to=${m.t}`);
     const d = await r.json();
