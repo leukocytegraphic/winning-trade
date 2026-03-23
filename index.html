@@ -488,14 +488,30 @@ const B_SYM = {};
 // LIVE DATA STATE
 // ═══════════════════════════════════════════════════════
 let livePrices = {}, live24h = {}, liveCandles = {};
-let wsKline = null, wsTicker = null, fxTimer = null;
+let wsKline = null, wsTicker = null, fxTimer = null, polygonTimer = null;
 let candles = [], currentPrice = 0;
+let binanceWsAlive = false;
+
+// Realistic seed prices so charts are never wildly wrong while APIs connect
+const SEED_PRICES = {
+  'BTC/USDT':67500,'ETH/USDT':2050,'BNB/USDT':590,'SOL/USDT':135,
+  'XRP/USDT':0.52,'ADA/USDT':0.38,'DOGE/USDT':0.105,'TRX/USDT':0.125,
+  'AVAX/USDT':28,'DOT/USDT':5.5,'LINK/USDT':13,'LTC/USDT':78,
+  'UNI/USDT':7.2,'ATOM/USDT':7,'NEAR/USDT':4.2,'ARB/USDT':0.85,
+  'OP/USDT':1.6,'SUI/USDT':1.1,'INJ/USDT':18,'TON/USDT':5.5,
+  'APT/USDT':7,'FIL/USDT':4.5,'HBAR/USDT':0.065,'STX/USDT':1.5,
+  'ALGO/USDT':0.17,'VET/USDT':0.025,
+  'SHIB/USDT':0.0000085,'PEPE/USDT':0.0000065,'WIF/USDT':0.55,
+  'BONK/USDT':0.000012,'FLOKI/USDT':0.000095,
+  'EUR/USD':1.085,'GBP/USD':1.265,'USD/JPY':151.5,'AUD/USD':0.655,
+  'USD/CHF':0.885,'GBP/JPY':191.5,'EUR/GBP':0.858,'NZD/USD':0.605,
+};
 
 // ═══════════════════════════════════════════════════════
 // CANDLE ENGINE
 // ═══════════════════════════════════════════════════════
 function seedCandles(pair) {
-  const base = livePrices[pair] || 100;
+  const base = livePrices[pair] || SEED_PRICES[pair] || 100;
   currentPrice = base;
   candles = [];
   for (let i = 0; i < 80; i++) {
@@ -588,6 +604,7 @@ function startMiniTicker() {
         if (!price || price <= 0) return;
         livePrices[pair] = price;
         live24h[pair]    = chg;
+        binanceWsAlive = true;
         if (pair === activePair) {
           setPriceBadge('● BINANCE LIVE', 'var(--green)', 'rgba(0,245,160,.3)');
           showPrice(pair, price);
@@ -740,25 +757,64 @@ async function fetchForex(pair) {
   } catch(e){}
 }
 
+// Polygon price polling — runs when Binance WS is down
+async function pollPolygonPrice(pair) {
+  const sym = B_SYM[pair];
+  if (!sym) return;
+  try {
+    const ticker = 'X:' + sym.toUpperCase().replace('USDT','USD');
+    const to = new Date().toISOString().split('T')[0];
+    const from = to; // just today
+    const url = `/api/polygon?ticker=${ticker}&multiplier=1/minute&from=${from}&to=${to}&limit=1&keyIdx=${polygonKeyIdx}`;
+    const res = await fetch(url);
+    if (!res.ok) { polygonKeyIdx = (polygonKeyIdx + 1) % 4; return; }
+    const data = await res.json();
+    if (data.results && data.results.length) {
+      const last = data.results[data.results.length - 1];
+      const price = last.c;
+      if (price && price > 0) {
+        livePrices[pair] = price;
+        if (pair === activePair) {
+          showPrice(pair, price);
+          setPriceBadge('● POLYGON LIVE', 'var(--blue)', 'rgba(0,195,255,.3)');
+          if (candles.length > 0) {
+            candles[candles.length-1].close = price;
+            candles[candles.length-1].bull = price >= candles[candles.length-1].open;
+            currentPrice = price;
+          }
+        }
+      }
+    }
+  } catch(e) { polygonKeyIdx = (polygonKeyIdx + 1) % 4; }
+}
+
 // Connect everything for the active pair
 function connect(pair) {
   setPriceBadge('◌ CONNECTING','var(--gold)','rgba(255,209,102,.3)');
   if (wsKline)  { wsKline.close(); wsKline = null; }
   if (fxTimer)  { clearInterval(fxTimer); fxTimer = null; }
+  if (polygonTimer) { clearInterval(polygonTimer); polygonTimer = null; }
 
   // Always draw immediately — chart is never blank
   seedCandles(pair);
   smcGen();
   drawChart();
+  // Show seed price immediately so it's realistic
+  showPrice(pair, livePrices[pair] || SEED_PRICES[pair] || currentPrice);
 
   if (B_SYM[pair]) {
-    // 1. Fetch real historical candles via serverless proxy → accurate chart immediately
+    // 1. Fetch real candles (tries Binance REST → Polygon fallback)
     fetchRealCandles(pair);
     // 2. WS kline keeps candles updating in real time
     startKlineStream(pair);
-    // miniTicker already running globally for live price
+    // 3. Polygon price polling as backup when Binance WS is down
+    //    Runs every 15s, stops if Binance WS comes alive
+    pollPolygonPrice(pair);
+    polygonTimer = setInterval(() => {
+      if (!binanceWsAlive) pollPolygonPrice(pair);
+    }, 15000);
   } else if (FOREX_MAP[pair]) {
-    // Forex — Frankfurter for rate, simulated candles
+    // Forex — Polygon or Frankfurter for rate, simulated candles
     fetchForex(pair).then(() => { seedCandles(pair); smcGen(); drawChart(); });
     fxTimer = setInterval(() => fetchForex(pair), 30000);
   }
